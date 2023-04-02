@@ -1,12 +1,9 @@
-# Wolverine
+# Elixir
 
 ## About
 
-Give your python scripts regenerative healing abilities!
+Elixir uses GPT-3.5 to give your code "healing" abilities. It allows you to execute Python scripts that may contain errors, and use GPT-3.5 to suggest changes to the code that can fix the errors.
 
-Run your scripts with Wolverine and when they crash, GPT-4 edits them and explains what went wrong. Even if you have many bugs it will repeatedly rerun until it's fixed.
-
-For a quick demonstration see my [demo video on twitter](https://twitter.com/bio_bootloader/status/1636880208304431104).
 
 ## Setup
 
@@ -18,15 +15,10 @@ Add your openAI api key to `openai_key.txt` - _warning!_ by default this uses GP
 
 ## Example Usage
 
-    python wolverine.py buggy_script.py "subtract" 20 3
+    python elixir.py buggy_script.py
 
-## Future Plans
+## Credits
 
-This is just a quick prototype I threw together in a few hours. There are many possible extensions and contributions are welcome:
+Thanks to https://github.com/biobootloader for creating wolverine which has been a huge inspiration.
 
-- add flags to customize usage, such as using GPT3.5-turbo instead or asking for user confirmation before running changed code
-- further iterations on the edit format that GPT responds in. Currently it struggles a bit with indentation, but I'm sure that can be improved
-- a suite of example buggy files that we can test prompts on to ensure reliablity and measure improvement
-- multiple files / codebases: send GPT everything that appears in the stacktrace
-- graceful handling of large files - should we just send GPT relevant classes / functions?
-- extension to languages other than python
+For a quick demonstration see his [demo video on twitter](https://twitter.com/bio_bootloader/status/1636880208304431104).
