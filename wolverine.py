@@ -14,13 +14,23 @@ with open("openai_key.txt") as f:
 
 
 def run_script(script_name, *args):
-    try:
-        result = subprocess.check_output(
-            [sys.executable, script_name, *args], stderr=subprocess.STDOUT
-        )
-    except subprocess.CalledProcessError as e:
-        return e.output.decode("utf-8"), e.returncode
-    return result.decode("utf-8"), 0
+    current_directory = os.getcwd()
+    docker_command = f"docker run -v {current_directory}:/app python:3.8 python /app/{script_name} {' '.join(args)}"
+
+    docker_process = subprocess.Popen(
+        docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    )
+
+    docker_process.wait()  # Wait for the subprocess to finish
+
+    # Print the logs from the Docker container
+    while True:
+        output = docker_process.stdout.readline()
+        if not output:
+            break
+        print(output.decode("utf-8").strip())
+
+    return docker_process.stdout.read().decode("utf-8"), docker_process.returncode
 
 
 def send_error_to_gpt4(file_path, args, error_message):
@@ -36,8 +46,7 @@ def send_error_to_gpt4(file_path, args, error_message):
         initial_prompt_text = f.read()
 
     prompt = (
-        initial_prompt_text +
-        "\n\n"
+        initial_prompt_text + "\n\n"
         "Here is the script that needs fixing:\n\n"
         f"{file_with_lines}\n\n"
         "Here are the arguments it was provided:\n\n"
@@ -51,8 +60,8 @@ def send_error_to_gpt4(file_path, args, error_message):
     # print(prompt)
 
     response = openai.ChatCompletion.create(
-        # model="gpt-3.5-turbo",
-        model="gpt-4",
+        model="gpt-3.5-turbo",
+        # model="gpt-4",
         messages=[
             {
                 "role": "user",
@@ -66,56 +75,23 @@ def send_error_to_gpt4(file_path, args, error_message):
 
 
 def apply_changes(file_path, changes_json):
-    with open(file_path, "r") as f:
-        original_file_lines = f.readlines()
-
     changes = json.loads(changes_json)
 
     # Filter out explanation elements
-    operation_changes = [change for change in changes if "operation" in change]
-    explanations = [
-        change["explanation"] for change in changes if "explanation" in change
-    ]
-
-    # Sort the changes in reverse line order
-    operation_changes.sort(key=lambda x: x["line"], reverse=True)
-
-    file_lines = original_file_lines.copy()
-    for change in operation_changes:
-        operation = change["operation"]
-        line = change["line"]
-        content = change["content"]
-
-        if operation == "Replace":
-            file_lines[line - 1] = content + "\n"
-        elif operation == "Delete":
-            del file_lines[line - 1]
-        elif operation == "InsertAfter":
-            file_lines.insert(line, content + "\n")
+    code = changes["script"]
+    explanations = changes["explanation"]
 
     with open(file_path, "w") as f:
-        f.writelines(file_lines)
+        f.writelines(code)
 
     # Print explanations
     cprint("Explanations:", "blue")
-    for explanation in explanations:
-        cprint(f"- {explanation}", "blue")
-
-    # Show the diff
-    print("\nChanges:")
-    diff = difflib.unified_diff(original_file_lines, file_lines, lineterm="")
-    for line in diff:
-        if line.startswith("+"):
-            cprint(line, "green", end="")
-        elif line.startswith("-"):
-            cprint(line, "red", end="")
-        else:
-            print(line, end="")
+    cprint(f"- {explanations}", "blue")
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: wolverine.py <script_name> <arg1> <arg2> ... [--revert]")
+    if len(sys.argv) < 1:
+        print("Usage: wolverine.py <script_name> ... [--revert]")
         sys.exit(1)
 
     script_name = sys.argv[1]
