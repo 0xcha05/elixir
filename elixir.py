@@ -12,10 +12,29 @@ from termcolor import cprint
 with open("openai_key.txt") as f:
     openai.api_key = f.read().strip()
 
+# Mapping of file extensions to Docker images
+DOCKER_IMAGES = {
+    ".py": "python:3.8",
+    ".js": "node:14",
+    ".rb": "ruby:3.0",
+    ".sh": "alpine:latest",
+    ".go": "golang:1.16",
+    ".java": "openjdk:17",
+    ".cpp": "gcc:11",
+    ".c": "gcc:11",
+}
+
 
 def run_script(script_name, *args):
     current_directory = os.getcwd()
-    docker_command = f"docker run -v {current_directory}:/app python:3.8 python /app/{script_name} {' '.join(args)}"
+    file_ext = os.path.splitext(script_name)[-1]
+    docker_image = DOCKER_IMAGES.get(file_ext)
+
+    if not docker_image:
+        print(f"Unsupported file extension: {file_ext}")
+        sys.exit(1)
+
+    docker_command = f"docker run -v {current_directory}:/app {docker_image} {docker_image.split(':')[0]} /app/{script_name} {' '.join(args)}"
 
     docker_process = subprocess.Popen(
         docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
