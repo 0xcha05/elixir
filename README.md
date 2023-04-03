@@ -2,7 +2,7 @@
 
 ## About
 
-Elixir uses GPT-3.5 to give your code "healing" abilities. It allows you to execute Python scripts that may contain errors, and use GPT-3.5 to suggest changes to the code that can fix the errors.
+Elixir uses GPT-3.5 to give your code "healing" abilities. It allows you to execute scripts in various programming languages such as Python, JavaScript, Ruby, Bash, Go, Java, C, and C++, that may contain errors, and use GPT-3.5 to suggest changes to the code that can fix the errors. The code is run in a Docker container, which isolates it from the host system and provides a consistent environment for running scripts.
 
 
 ## Setup
