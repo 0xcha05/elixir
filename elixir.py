@@ -34,7 +34,31 @@ def run_script(script_name, *args):
         print(f"Unsupported file extension: {file_ext}")
         sys.exit(1)
 
-    docker_command = f"docker run -v {current_directory}:/app {docker_image} {docker_image.split(':')[0]} /app/{script_name} {' '.join(args)}"
+    container_name = "elixir-container"
+
+    # Check if container is already running, if not start it
+    if (
+        container_name
+        not in subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True
+        ).stdout
+    ):
+        subprocess.run(
+            [
+                "docker",
+                "run",
+                "-d",
+                "-v",
+                f"{current_directory}:/app",
+                "--name",
+                container_name,
+                docker_image,
+                "sleep",
+                "infinity",
+            ]
+        )
+
+    docker_command = f"docker exec {container_name} {docker_image.split(':')[0]} /app/{script_name} {' '.join(args)}"
 
     docker_process = subprocess.Popen(
         docker_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -110,7 +134,7 @@ def apply_changes(file_path, changes_json):
 
 def main():
     if len(sys.argv) < 1:
-        print("Usage: wolverine.py <script_name> ... [--revert]")
+        print("Usage: elixir.py <script_name> ... [--revert]")
         sys.exit(1)
 
     script_name = sys.argv[1]
