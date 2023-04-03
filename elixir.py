@@ -16,12 +16,6 @@ with open("openai_key.txt") as f:
 DOCKER_IMAGES = {
     ".py": "python:3.8",
     ".js": "node:14",
-    ".rb": "ruby:3.0",
-    ".sh": "alpine:latest",
-    ".go": "golang:1.16",
-    ".java": "openjdk:17",
-    ".cpp": "gcc:11",
-    ".c": "gcc:11",
 }
 
 
